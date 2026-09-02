@@ -1,0 +1,8 @@
+node_modules/
+.npm-cache/
+release/
+dist/
+*.log
+.DS_Store
+# 本机交接记录含本地用户名与绝对路径，仅供本机使用，不发布到公共仓库。
+HANDOFF_PLAN.md

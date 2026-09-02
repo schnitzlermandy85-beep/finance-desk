@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1040" viewBox="0 0 1500 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Finance Desk 工作流程图</title>
+  <desc id="desc">用户界面经过受限预加载桥接与主进程，安全地访问金融数据 API、可选本地数据库及导出文件；不同资产类型进入不同的数据处理分支。</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; fill: #172033; }
+      .title { font-size: 32px; font-weight: 700; } .subtitle { font-size: 16px; fill: #65738a; }
+      .label { font-size: 20px; font-weight: 700; } .small { font-size: 15px; fill: #40506a; }
+      .box { stroke-width: 2; rx: 16; } .ui { fill: #e9f1ff; stroke: #4777cf; } .bridge { fill: #f0ebff; stroke: #7658c9; }
+      .core { fill: #e9f8f1; stroke: #20946c; } .remote { fill: #fff4df; stroke: #d58a16; } .local { fill: #f9ebef; stroke: #c55470; }
+      .output { fill: #eef3f7; stroke: #6a7f95; } .lane { fill: #f8fafc; stroke: #d9e1ea; stroke-width: 1.5; rx: 20; }
+      .arrow { stroke: #60728a; stroke-width: 2.5; fill: none; marker-end: url(#arrow); } .dash { stroke-dasharray: 7 6; }
+      .note { font-size: 13px; fill: #65738a; } .secure { font-size: 14px; fill: #157452; font-weight: 600; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#60728a"/></marker>
+  </defs>
+  <rect width="1500" height="1040" fill="#ffffff"/>
+  <text x="64" y="60" class="title">Finance Desk · 实际工作流程</text>
+  <text x="64" y="90" class="subtitle">Electron 桌面研究工具｜当前代码实现（数据查询与研究，不包含交易或投资建议）</text>
+
+  <rect x="45" y="130" width="330" height="810" class="lane"/><text x="70" y="168" class="label">1. 用户操作 / 渲染层</text>
+  <rect x="75" y="200" width="270" height="96" class="box ui"/><text x="100" y="238" class="label">连接设置</text><text x="100" y="266" class="small">粘贴、保存或清除 API Key</text>
+  <rect x="75" y="337" width="270" height="115" class="box ui"/><text x="100" y="375" class="label">市场研究</text><text x="100" y="403" class="small">搜索名称 / 代码</text><text x="100" y="429" class="small">选择标的与资产类型</text>
+  <rect x="75" y="493" width="270" height="110" class="box ui"/><text x="100" y="531" class="label">研究结果</text><text x="100" y="559" class="small">行情、K线、财报、基金资料</text><text x="100" y="585" class="small">导出 / 加入自选</text>
+  <rect x="75" y="644" width="270" height="104" class="box ui"/><text x="100" y="682" class="label">自选观察</text><text x="100" y="710" class="small">localStorage 本地保存</text><text x="100" y="736" class="small">跨资产行情刷新</text>
+  <rect x="75" y="789" width="270" height="104" class="box ui"/><text x="100" y="827" class="label">本地数据</text><text x="100" y="855" class="small">输入只读 SQL</text><text x="100" y="881" class="small">展示 DuckDB 查询结果</text>
+
+  <rect x="420" y="130" width="300" height="810" class="lane"/><text x="445" y="168" class="label">2. 安全边界</text>
+  <rect x="450" y="290" width="240" height="140" class="box bridge"/><text x="478" y="330" class="label">preload.js</text><text x="478" y="358" class="small">contextBridge 白名单</text><text x="478" y="384" class="small">参数校验、IPC 调用</text><text x="478" y="410" class="note">无 require / process / ipcRenderer</text>
+  <rect x="450" y="510" width="240" height="230" class="box core"/><text x="478" y="550" class="label">main.js 主进程</text><text x="478" y="580" class="small">• safeStorage 管理 Key</text><text x="478" y="607" class="small">• API 请求与错误映射</text><text x="478" y="634" class="small">• 保存对话框与文件导出</text><text x="478" y="661" class="small">• 只读 SQL 白名单</text><text x="478" y="701" class="secure">Key 仅停留在这里</text>
+
+  <rect x="765" y="130" width="690" height="810" class="lane"/><text x="790" y="168" class="label">3. 数据路由与输出</text>
+  <rect x="795" y="205" width="285" height="120" class="box remote"/><text x="823" y="245" class="label">同花顺金融 API</text><text x="823" y="273" class="small">X-api-key 请求头认证</text><text x="823" y="299" class="small">搜索 → thscode + asset_type</text>
+  <rect x="1120" y="205" width="285" height="120" class="box local"/><text x="1148" y="245" class="label">可选本地 DuckDB</text><text x="1148" y="273" class="small">hithink-finance CLI</text><text x="1148" y="299" class="small">只允许 SELECT / WITH / EXPLAIN</text>
+
+  <rect x="795" y="385" width="185" height="165" class="box remote"/><text x="820" y="424" class="label">A 股</text><text x="820" y="452" class="small">快照、前复权日K</text><text x="820" y="478" class="small">利润表 / 负债表</text><text x="820" y="504" class="small">现金流 / 指标</text><text x="820" y="530" class="small">估值接口已封装</text>
+  <rect x="1008" y="385" width="185" height="165" class="box remote"/><text x="1033" y="424" class="label">指数</text><text x="1033" y="452" class="small">行情快照</text><text x="1033" y="478" class="small">日 K（无复权）</text><text x="1033" y="504" class="small">成分股列表</text>
+  <rect x="1220" y="385" width="185" height="165" class="box remote"/><text x="1245" y="424" class="label">基金</text><text x="1245" y="452" class="small">OTC / ETF / LOF</text><text x="1245" y="478" class="small">REITs：资料与收益</text><text x="1245" y="504" class="small">净值或场内日 K</text>
+
+  <rect x="835" y="655" width="230" height="112" class="box output"/><text x="862" y="695" class="label">界面展示</text><text x="862" y="723" class="small">数据表、统计卡、Canvas K线</text><text x="862" y="749" class="small">空值显示为 “—”</text>
+  <rect x="1130" y="655" width="230" height="112" class="box output"/><text x="1157" y="695" class="label">用户输出</text><text x="1157" y="723" class="small">CSV / JSON 保存</text><text x="1157" y="749" class="small">系统保存对话框选路径</text>
+
+  <path d="M345 248 H450" class="arrow"/><path d="M345 394 H450" class="arrow"/><path d="M345 548 H450" class="arrow"/><path d="M345 841 H450 V700" class="arrow"/>
+  <path d="M570 430 V510" class="arrow"/><path d="M690 600 H795 V265" class="arrow"/><path d="M690 690 H1120 V265" class="arrow dash"/>
+  <path d="M938 325 V385" class="arrow"/><path d="M938 325 V355 H1100 V385" class="arrow"/><path d="M938 325 V355 H1312 V385" class="arrow"/>
+  <path d="M888 550 V655" class="arrow"/><path d="M1100 550 V620 H950 V655" class="arrow"/><path d="M1312 550 V620 H950 V655" class="arrow"/>
+  <path d="M1065 711 H1130" class="arrow"/>
+  <text x="454" y="278" class="note">受限调用</text><text x="720" y="245" class="note">HTTPS</text><text x="945" y="350" class="note">按资产类型分流</text><text x="704" y="680" class="note">可选本机 CLI</text>
+  <text x="64" y="985" class="subtitle">安全设计：渲染层不能访问 Node 或 API Key；外部网页在系统浏览器打开；主窗口拒绝外部导航。</text>
+</svg>

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Desk</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="brand">
+        <span>F</span>
+        <div>Finance Desk<small>同花顺金融数据</small></div>
+      </div>
+      <button class="nav active" data-view="research">⌕ <span>市场研究</span></button>
+      <button class="nav" data-view="watchlist">☆ <span>自选观察</span></button>
+      <button class="nav" data-view="paper">◌ <span>虚拟盘实验</span></button>
+      <button class="nav" data-view="db">⛁ <span>本地数据</span></button>
+      <div class="nav-bottom">
+        <button class="nav" data-view="settings">⚙ <span>连接设置</span></button>
+      </div>
+    </aside>
+    <main>
+      <section id="research" class="view active">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">研究工作台</p>
+            <h1>从一个标的开始</h1>
+          </div>
+          <span id="connection" class="pill">检查连接中</span>
+        </div>
+        <form id="search-form" class="search">
+          <input
+            id="search-input"
+            placeholder="输入名称或代码，例如 贵州茅台 / 600519 / 沪深300"
+            autocomplete="off"
+          />
+          <select id="asset-filter" aria-label="资产类型">
+            <option value="">全部类型</option>
+            <option value="a-share">A 股</option>
+            <option value="a-share-index">指数</option>
+            <option value="fund-etf">ETF</option>
+            <option value="fund-lof">LOF</option>
+            <option value="fund-otc">场外基金</option>
+            <option value="fund-reits">REITs</option>
+          </select>
+          <button id="search-button">查询</button>
+        </form>
+        <p class="hint">搜索会先确认标准证券代码，再按资产类型路由到对应的行情与数据端点。</p>
+        <div id="notice" role="status"></div>
+        <div id="candidates" class="candidates"></div>
+        <section id="result" hidden>
+          <div class="title-row">
+            <div>
+              <p class="eyebrow" id="asset-type">A 股</p>
+              <h2 id="asset-name">—</h2>
+              <p id="asset-code">—</p>
+            </div>
+            <div class="title-actions">
+              <select id="export-format" aria-label="导出格式">
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+              </select>
+              <button id="ai-research-button" class="secondary" disabled>AI 研究助手</button>
+              <button id="paper-candidate-button" class="secondary" disabled>加入虚拟盘候选</button>
+              <button id="export-button" class="secondary" disabled>导出数据</button>
+              <button id="watch-button" class="secondary" disabled>加入自选</button>
+            </div>
+          </div>
+          <div class="stats" id="stats"></div>
+
+          <article class="panel chart-panel">
+            <div class="panel-head">
+              <h3 id="chart-title">日 K 线</h3>
+              <label class="chart-period-control"
+                >K 线周期
+                <select id="chart-period" aria-label="K 线周期">
+                  <option value="day">日 K</option>
+                  <option value="month">月 K</option>
+                  <option value="year">年 K</option>
+                </select>
+              </label>
+              <span id="chart-meta" class="hint"></span>
+            </div>
+            <div id="chart-wrap">
+              <canvas id="chart"></canvas>
+              <div id="chart-tip" hidden></div>
+            </div>
+          </article>
+
+          <article class="panel" id="constituents-panel" hidden>
+            <div class="panel-head">
+              <h3>成分股</h3>
+              <span id="constituents-meta" class="hint"></span>
+            </div>
+            <div id="constituents"></div>
+          </article>
+
+          <div class="tabs" id="fin-tabs">
+            <button class="tab active" data-tab="income">利润表</button>
+            <button class="tab" data-tab="balance">资产负债表</button>
+            <button class="tab" data-tab="cashflow">现金流量表</button>
+            <button class="tab" data-tab="indicators">财务指标</button>
+          </div>
+          <div id="tab-income" class="tab-panel active"></div>
+          <div id="tab-balance" class="tab-panel"></div>
+          <div id="tab-cashflow" class="tab-panel"></div>
+          <div id="tab-indicators" class="tab-panel"></div>
+
+          <article class="panel" id="fund-panel" hidden>
+            <h3>基金资料</h3>
+            <div id="fund-profile" class="fund-grid"></div>
+            <h3>区间收益</h3>
+            <div id="fund-returns" class="fund-grid"></div>
+            <h3>净值走势（近一年）</h3>
+            <div id="fund-nav"></div>
+          </article>
+
+          <article class="panel disclaimer">
+            <h3>使用提示</h3>
+            <p>
+              行情为最新可用快照；字段中的空值表示尚未披露，不应当作 0。历史 K 线为前复权口径（指数与 ETF
+              无复权概念）。
+            </p>
+            <p>本应用只用于研究与信息查询，不构成投资建议。</p>
+          </article>
+        </section>
+      </section>
+
+      <section id="paper" class="view">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">本地独立账本</p>
+            <h1>虚拟盘实验</h1>
+          </div>
+          <button id="paper-reset" class="secondary">重置虚拟账户</button>
+        </div>
+        <article class="panel disclaimer">
+          <h3>实验边界</h3>
+          <p>
+            仅模拟本地账户与订单，不连接券商、不发送真实委托。人工盘与策略盘共享候选、费用和参考价，便于比较；价格为你主动同步的快照，并非逐笔实时成交价。
+          </p>
+          <p>
+            AI 可以辅助研究与解释，但不会绕过规则自行操作。策略盘的均线规则可独立运行；结果不构成投资建议。
+          </p>
+        </article>
+        <div id="paper-metrics" class="stats"></div>
+        <article class="panel simulation-mode">
+          <div class="panel-head">
+            <h3>运行模式</h3>
+            <span id="simulation-mode-hint" class="hint"></span>
+          </div>
+          <div class="paper-order-controls">
+            <select id="simulation-mode" aria-label="策略运行模式">
+              <option value="forward">策略前向模拟（现在开始）</option>
+              <option value="backtest">策略历史回测（选择过去区间）</option>
+              <option value="practice">人工历史练习（逐日推进）</option>
+            </select>
+            <input id="simulation-start" type="date" aria-label="模拟开始日期" />
+            <input id="simulation-end" type="date" aria-label="模拟结束日期" />
+            <button id="simulation-apply" class="secondary">应用模式</button>
+          </div>
+          <p class="hint">
+            前向模拟只依据运行当天可见的数据；回测按历史日期逐日运行；历史练习将未来行情隐藏，并在你点击推进后才进入下一个交易日。
+          </p>
+        </article>
+        <article class="panel paper-order">
+          <h3 id="manual-order-title">人工盘：手动模拟订单</h3>
+          <div class="paper-order-controls">
+            <select id="paper-symbol" aria-label="虚拟盘标的"></select>
+            <select id="paper-side" aria-label="模拟操作">
+              <option value="buy">模拟买入</option>
+              <option value="sell">模拟卖出</option>
+            </select>
+            <input id="paper-quantity" type="number" min="1" step="1" placeholder="数量（股）" />
+            <button id="paper-submit">提交模拟订单</button>
+          </div>
+          <textarea
+            id="paper-note"
+            maxlength="500"
+            placeholder="记录这次操作的理由、计划或风险点（建议填写，供后续复盘）"
+          ></textarea>
+          <p id="paper-order-hint" class="hint"></p>
+        </article>
+        <article class="panel paper-order">
+          <div class="panel-head">
+            <h3>策略盘：前向模拟</h3>
+            <span id="strategy-status" class="hint">等待运行</span>
+          </div>
+          <p class="hint">
+            内置规则：MA5 上穿/位于 MA20 上方时按账户 20% 买入；MA5 低于 MA20
+            时卖出持仓。每次运行只使用当时已取得的日线和最新参考价。
+          </p>
+          <div class="paper-order-controls strategy-controls">
+            <input id="strategy-short" type="number" min="2" max="60" value="5" aria-label="短期均线窗口" />
+            <input id="strategy-long" type="number" min="3" max="250" value="20" aria-label="长期均线窗口" />
+            <input
+              id="strategy-allocation"
+              type="number"
+              min="1"
+              max="100"
+              value="20"
+              aria-label="单标的仓位百分比"
+            />
+            <button id="strategy-run">同步行情并前向运行</button>
+          </div>
+          <p class="hint">
+            输入依次为短均线天数、长均线天数、每个新标的目标仓位（%）。策略执行以这里展示的确定性参数为准。
+          </p>
+          <button id="strategy-ai" class="secondary">交给 AI 审阅策略与双账户差异</button>
+          <div id="strategy-decisions"></div>
+        </article>
+        <article class="panel" id="practice-panel" hidden>
+          <div class="panel-head">
+            <h3>人工历史练习</h3>
+            <span id="practice-status" class="hint">请先应用历史练习模式</span>
+          </div>
+          <p class="hint">
+            当前日期以前的行情可见；可在上方人工订单中按当前练习日参考价交易。不会泄露下一交易日的价格。
+          </p>
+          <button id="practice-advance" class="secondary">推进到下一个交易日</button>
+        </article>
+        <article class="panel" id="backtest-panel" hidden>
+          <h3>历史回测结果</h3>
+          <div id="backtest-results"></div>
+        </article>
+        <article class="panel">
+          <h3>候选标的</h3>
+          <div id="paper-candidates"></div>
+        </article>
+        <article class="panel">
+          <h3>人工盘与策略盘持仓对比</h3>
+          <div id="paper-holdings"></div>
+        </article>
+        <article class="panel">
+          <h3>交易与复盘日志</h3>
+          <div id="paper-trades"></div>
+        </article>
+      </section>
+
+      <section id="watchlist" class="view">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">本地保存</p>
+            <h1>自选观察</h1>
+          </div>
+          <button id="refresh-watchlist" class="secondary">刷新行情</button>
+        </div>
+        <div id="watchlist-content" class="watch-grid"></div>
+      </section>
+
+      <section id="db" class="view">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">本地数据</p>
+            <h1>本地数据库</h1>
+          </div>
+          <span id="db-status" class="pill">检测中</span>
+        </div>
+        <article class="panel settings-card">
+          <p>
+            可选：检测本机已安装的 <code>hithink-finance</code> CLI，对其本地 DuckDB 执行<strong>只读</strong>
+            SQL 查询。初始化与同步数据请先阅读源仓库文档。
+          </p>
+          <div id="db-query">
+            <textarea
+              id="db-sql"
+              rows="4"
+              placeholder="SELECT table_name FROM information_schema.tables WHERE table_schema='main'"
+            ></textarea>
+            <button id="db-run">执行只读查询</button>
+          </div>
+          <div id="db-result"></div>
+        </article>
+      </section>
+
+      <section id="settings" class="view">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">安全连接</p>
+            <h1>API Key 设置</h1>
+          </div>
+        </div>
+        <article class="panel settings-card">
+          <p>Key 将通过系统安全存储加密保存，仅用于向同花顺金融数据服务发起请求。</p>
+          <p id="encrypt-warning" class="warn" hidden>
+            系统安全存储当前不可用，Key 将以本机文件（权限 0600）保存。请确认设备可信后再继续。
+          </p>
+          <form id="key-form">
+            <label
+              >API Key<input
+                id="key-input"
+                type="password"
+                placeholder="粘贴 API Key"
+                autocomplete="off" /></label
+            ><button id="save-key-button">安全保存</button>
+          </form>
+          <button id="clear-key" class="text-button">移除本机保存的 Key</button>
+          <div class="cli-sync">
+            <div>
+              <strong>Claude Code / hithink-finance</strong>
+              <p class="hint">
+                将本应用已保存的 Key 仅通过标准输入同步到 CLI 的凭据库，供 AI 研究助手调用
+                Skill。不会传入提示词或终端命令。
+              </p>
+              <p id="hithink-status" class="hint">正在检查 CLI 认证状态…</p>
+            </div>
+            <button id="sync-hithink-key" class="secondary">同步到 hithink-finance</button>
+          </div>
+          <p class="hint">
+            在 <a href="https://fuyao.aicubes.cn/admin" target="_blank">API Key 管理页</a> 创建
+            Key。请勿将它提交至 Git 或发送给他人。
+          </p>
+        </article>
+      </section>
+    </main>
+    <script src="src/format.js"></script>
+    <script src="src/chart.js"></script>
+    <script src="src/paper.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

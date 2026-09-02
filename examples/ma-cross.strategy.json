@@ -1,0 +1,12 @@
+{
+  "id": "ma-cross-v1",
+  "name": "均线交叉学习示例",
+  "kind": "builtin-ma-cross",
+  "parameters": {
+    "shortWindow": 5,
+    "longWindow": 20,
+    "allocationPct": 20,
+    "lotSize": 100
+  },
+  "notes": "这是策略定义示例，不是投资建议，也不是可直接实盘执行的指令。"
+}
